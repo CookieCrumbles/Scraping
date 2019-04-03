@@ -13,7 +13,7 @@ $seleniumOptions = New-Object OpenQA.Selenium.Chrome.ChromeOptions
 
 # Use the method AddAdditionalCapability of the newly created object based on the ChromeOptions Class
 $seleniumOptions.AddAdditionalCapability("useAutomationExtension", $false) 
-
+$seleniumOptions.AddArgument("headless") # Prevent the driver from spawning the chrome windows; this scrapes without showing it.
 # Create a new object of the ChromeDriver class and feed it the options by the object of the ChromeOptions Class. 
 # ChromeDriver is a class of the namespace OpenQA.Selenium.Chrome
 $seleniumDriver = New-Object OpenQA.Selenium.Chrome.ChromeDriver($seleniumOptions) 
@@ -32,11 +32,16 @@ DO{
 
     # Simulate a failing scrape situation.
     $site = @("https://www.hln.b","https://www.hln.be") # DEBUG      
-    $seleniumDriver.Navigate().GoToURL(($site | Get-Random)) # DEBUG
-
-    $seleniumWait = New-Object -TypeName OpenQA.Selenium.Support.UI.WebDriverWait($seleniumDriver,(New-TimeSpan -Seconds 9)) # Make driver wait for 9 seconds or, if button found, go on with rest of script.
-    $seleniumWait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementIsVisible([OpenQA.Selenium.By]::XPath("/html/body/div[1]/main/div/section[1]/form/button")))
-    $seleniumDriver.FindElementByXpath("/html/body/div[1]/main/div/section[1]/form/button")
+    $seleniumDriver.Navigate().GoToURL(($site | Get-Random)) # DEBUG    
+    try {
+        $seleniumWait = New-Object -TypeName OpenQA.Selenium.Support.UI.WebDriverWait($seleniumDriver,(New-TimeSpan -Seconds 9)) # Make driver wait for 9 seconds or, if button found, go on with rest of script.
+        $seleniumWait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementIsVisible([OpenQA.Selenium.By]::XPath("/html/body/div[1]/main/div/section[1]/form/button"))) | out-null
+        $seleniumDriver.FindElementByXpath("/html/body/div[1]/main/div/section[1]/form/button")
+    }
+    catch {
+        # The Try{}Catch{} makes the methods ElementIsVisible and ByXPath silent.
+        # Trick learned from ka-splam over at Stack.
+    }
     
     # If the line above threw an error, take a screenshot
     IF  ($error[0].Exception -like "*no such element*") {
@@ -54,9 +59,9 @@ DO{
 Write-debug  "BEGIN: $(get-date)" # Record start-time
 
 #region Debug
-$seleniumWait.Message = "Time is up, lets get it."
+$seleniumWait.Message = "Time is up, let's get it."
 write-host $seleniumWait.Message -ForegroundColor Blue
-$seleniumWait # Debug
+# $seleniumWait # Debug
 #endregion
 
 Write-debug "END: $(get-date)" # Record end-time
