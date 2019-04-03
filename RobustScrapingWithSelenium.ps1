@@ -40,7 +40,7 @@ DO{
     }
     catch {
         # The Try{}Catch{} makes the methods ElementIsVisible and ByXPath silent.
-        # Trick learned from ka-splam over at Stack.
+        # Trick learned from ka-splam over at Slack.
     }
     
     # If the line above threw an error, take a screenshot
